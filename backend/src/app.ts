@@ -13,6 +13,8 @@ interface User {
   email: string;
   password: string;
   name: string;
+  firstName?: string;
+  lastName?: string;
   portfolio: Portfolio;
 }
 
@@ -226,9 +228,12 @@ export class StockApp {
     // Auth routes
     this.app.post('/api/auth/register', (req, res) => {
       try {
-        const { email, password, name } = req.body;
+        const { email, password, name, firstName, lastName } = req.body;
         
-        if (!email || !password || !name) {
+        // Accept either 'name' or 'firstName + lastName'
+        const fullName = name || (firstName && lastName ? `${firstName} ${lastName}` : '');
+        
+        if (!email || !password || !fullName) {
           return res.status(400).json({ success: false, message: 'All fields required' });
         }
 
@@ -236,7 +241,7 @@ export class StockApp {
           return res.status(409).json({ success: false, message: 'User already exists' });
         }
 
-        const user = this.dataStore.createUser(email, password, name);
+        const user = this.dataStore.createUser(email, password, fullName);
         const { password: _, ...userWithoutPassword } = user;
         
         res.json({
