@@ -48,13 +48,17 @@ ENV NODE_ENV=production
 # Copy built backend
 COPY --from=backend-builder /app/backend/dist ./backend/dist
 COPY --from=backend-builder /app/backend/package*.json ./backend/
-COPY --from=backend-builder /app/backend/node_modules ./backend/node_modules
 
 # Copy built frontend into backend
 COPY --from=frontend-builder /app/frontend/build ./frontend/build
 
-# Copy root package.json
+# Copy root package.json and install production dependencies
 COPY package*.json ./
+COPY backend/package*.json ./backend/
+COPY frontend/package*.json ./frontend/
+
+# Install only production dependencies
+RUN npm ci --only=production
 
 # Expose port (Railway will set PORT env variable)
 EXPOSE 5000

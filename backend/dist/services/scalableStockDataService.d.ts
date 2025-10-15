@@ -1,0 +1,65 @@
+import { Server } from 'socket.io';
+import { Stock } from '../types/stock';
+import { UserService } from './userService';
+declare class ScalableStockDataService {
+    private io;
+    private cache;
+    private nse;
+    private userService;
+    private updateInterval;
+    private batchQueue;
+    private isProcessing;
+    private readonly SCALING_CONFIG;
+    private stats;
+    private readonly MAX_ERROR_COUNT;
+    private readonly CACHE_EXPIRY_MS;
+    private readonly HIGH_PRIORITY_INTERVAL;
+    private readonly MEMORY_CLEANUP_INTERVAL;
+    constructor(io: Server, userService: UserService);
+    start(stockListType?: 'nifty50' | 'sensex30' | 'nifty500', customCount?: number): Promise<void>;
+    stop(): void;
+    private initializeStocks;
+    private calculatePriority;
+    private getBatchConfig;
+    private startBatchProcessing;
+    private processBatch;
+    private getNextBatch;
+    private shouldUpdateStock;
+    private delayedUpdate;
+    private updateStock;
+    private simulateStockUpdate;
+    private broadcastUpdates;
+    private updateUserPortfolios;
+    private chunkArray;
+    private updatePerformanceStats;
+    private setupMemoryCleanup;
+    private logPerformanceStats;
+    testSetPrices(priceUpdates: {
+        symbol: string;
+        newPrice: number;
+    }[]): void;
+    forcePortfolioUpdate(): Promise<void>;
+    forceSimulation(symbols: string[]): void;
+    getStock(symbol: string): Stock | null;
+    getAllStocks(): Stock[];
+    getPerformanceStats(): {
+        cache: {
+            stock: import("./cacheService").CacheStats;
+            portfolio: import("./cacheService").CacheStats;
+            general: import("./cacheService").CacheStats;
+            timestamp: string;
+        };
+        cacheHitRate: number;
+        totalRequests: number;
+        successfulRequests: number;
+        failedRequests: number;
+        averageResponseTime: number;
+        lastBatchTime: number;
+        activeStocks: number;
+        cacheHits: number;
+        cacheMisses: number;
+    };
+    getActiveStockCount(): number;
+    switchStockList(stockListType: 'nifty50' | 'sensex30' | 'nifty500', customCount?: number): void;
+}
+export default ScalableStockDataService;
