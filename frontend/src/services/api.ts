@@ -11,7 +11,12 @@ import {
   StockHolding
 } from '../types/auth';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+// Use relative URL in production (when served from same domain) or env variable in development
+const API_BASE_URL = process.env.REACT_APP_API_URL || (
+  process.env.NODE_ENV === 'production' 
+    ? '/api'  // Relative URL when served from backend
+    : 'http://localhost:5000/api'  // Development URL
+);
 
 console.log('🔧 API Client: Base URL configured as:', API_BASE_URL);
 

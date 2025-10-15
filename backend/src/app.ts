@@ -54,8 +54,21 @@ class DataStore {
   private dataFile = path.join(__dirname, 'data', 'users.json');
 
   constructor() {
+    this.ensureDataDirectory();
     this.loadUsers();
     this.initializeStocks();
+  }
+
+  private ensureDataDirectory() {
+    try {
+      const dataDir = path.dirname(this.dataFile);
+      if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+        console.log('📁 Created data directory');
+      }
+    } catch (error) {
+      console.error('⚠️ Could not create data directory:', error);
+    }
   }
 
   private loadUsers() {
@@ -173,8 +186,9 @@ export class StockApp {
   constructor() {
     this.app = express();
     this.server = createServer(this.app);
+    const allowedOrigins = process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000'];
     this.io = new Server(this.server, {
-      cors: { origin: "http://localhost:3000", credentials: true }
+      cors: { origin: allowedOrigins, credentials: true }
     });
     this.dataStore = new DataStore();
     this.setupMiddleware();
@@ -187,13 +201,20 @@ export class StockApp {
       crossOriginEmbedderPolicy: false,
       contentSecurityPolicy: false
     }));
+    const allowedOrigins = process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000'];
     this.app.use(cors({
-      origin: 'http://localhost:3000',
+      origin: allowedOrigins,
       credentials: true
     }));
     this.app.use(compression());
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
+    
+    // Serve static frontend files in production
+    const frontendPath = path.join(__dirname, '../../frontend/build');
+    if (fs.existsSync(frontendPath)) {
+      this.app.use(express.static(frontendPath));
+    }
   }
 
   private setupRoutes() {
@@ -357,6 +378,14 @@ export class StockApp {
         res.status(500).json({ success: false, message: 'Trade failed' });
       }
     });
+
+    // Catch-all route to serve React app for client-side routing
+    const frontendPath = path.join(__dirname, '../../frontend/build');
+    if (fs.existsSync(frontendPath)) {
+      this.app.get('*', (req, res) => {
+        res.sendFile(path.join(frontendPath, 'index.html'));
+      });
+    }
   }
 
   private authMiddleware(req: any, res: any, next: any) {

@@ -15,7 +15,23 @@ interface UseStockSocketReturn {
   reconnectAttempts: number;
 }
 
-export const useStockSocket = (serverUrl: string = 'http://localhost:5000'): UseStockSocketReturn => {
+// Determine WebSocket server URL based on environment
+const getDefaultServerUrl = (): string => {
+  // Use environment variable if available
+  if (process.env.REACT_APP_WS_URL) {
+    return process.env.REACT_APP_WS_URL;
+  }
+  
+  // In production, use same domain (relative)
+  if (process.env.NODE_ENV === 'production') {
+    return window.location.origin;
+  }
+  
+  // Development default
+  return 'http://localhost:5000';
+};
+
+export const useStockSocket = (serverUrl: string = getDefaultServerUrl()): UseStockSocketReturn => {
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'error'>('disconnected');
