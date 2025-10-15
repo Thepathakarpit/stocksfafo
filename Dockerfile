@@ -1,42 +1,36 @@
-# Multi-stage Dockerfile for Railway deployment
+# Simplified Dockerfile for Railway - No workspace complications
 FROM node:18-alpine AS base
-
-# Install dependencies for both frontend and backend
-FROM base AS deps
-WORKDIR /app
-
-# Copy package files
-COPY package*.json ./
-COPY backend/package*.json ./backend/
-COPY frontend/package*.json ./frontend/
-
-# Install all dependencies (using workspaces)
-RUN npm ci
 
 # Build frontend
 FROM base AS frontend-builder
-WORKDIR /app
-
-# Copy frontend files
-COPY --from=deps /app/node_modules ./node_modules
-COPY frontend/ ./frontend/
-COPY package*.json ./
-
-# Build the React app
 WORKDIR /app/frontend
+
+# Copy frontend package files
+COPY frontend/package*.json ./
+
+# Install frontend dependencies
+RUN npm ci
+
+# Copy frontend source
+COPY frontend/ ./
+
+# Build frontend
 RUN npm run build
 
 # Build backend
 FROM base AS backend-builder
-WORKDIR /app
-
-# Copy backend files
-COPY --from=deps /app/node_modules ./node_modules
-COPY backend/ ./backend/
-COPY package*.json ./
-
-# Build the backend
 WORKDIR /app/backend
+
+# Copy backend package files
+COPY backend/package*.json ./
+
+# Install ALL dependencies (including devDependencies for build)
+RUN npm ci
+
+# Copy backend source
+COPY backend/ ./
+
+# Build backend
 RUN npm run build
 
 # Production image
@@ -45,23 +39,25 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Copy built backend
-COPY --from=backend-builder /app/backend/dist ./backend/dist
-COPY --from=backend-builder /app/backend/package*.json ./backend/
-
-# Copy built frontend into backend
-COPY --from=frontend-builder /app/frontend/build ./frontend/build
-
-# Copy root package.json and install production dependencies
-COPY package*.json ./
+# Copy backend package files
 COPY backend/package*.json ./backend/
-COPY frontend/package*.json ./frontend/
 
-# Install only production dependencies
+# Install ONLY production dependencies for backend
+WORKDIR /app/backend
 RUN npm ci --only=production
 
-# Expose port (Railway will set PORT env variable)
+# Copy built backend
+WORKDIR /app
+COPY --from=backend-builder /app/backend/dist ./backend/dist
+
+# Copy built frontend
+COPY --from=frontend-builder /app/frontend/build ./frontend/build
+
+# Copy root package.json for start script
+COPY package.json ./
+
+# Expose port
 EXPOSE 5000
 
-# Start the server
-CMD ["npm", "start"]
+# Start command
+CMD ["node", "backend/dist/server.js"]
