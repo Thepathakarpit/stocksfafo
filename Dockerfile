@@ -19,7 +19,6 @@ WORKDIR /app
 
 # Copy frontend files
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/frontend/node_modules ./frontend/node_modules
 COPY frontend/ ./frontend/
 COPY package*.json ./
 
@@ -33,7 +32,6 @@ WORKDIR /app
 
 # Copy backend files
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/backend/node_modules ./backend/node_modules
 COPY backend/ ./backend/
 COPY package*.json ./
 
