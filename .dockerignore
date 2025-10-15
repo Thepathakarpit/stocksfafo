@@ -1,0 +1,61 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+!README.md
+docs/
+DEVELOPMENT.md
+Auth_and_trade.md
+feedback.md
+RAILWAY_DEPLOYMENT.md
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Build outputs
+backend/dist
+frontend/build
+*.log
+
+# Dependencies
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+coverage
+.nyc_output
+*.test.js
+*.spec.js
+__tests__
+
+# Environment
+.env
+.env.local
+.env.*.local
+*.env
+!railway.env.example
+
+# Scripts (not needed in production)
+run_all.sh
+build-production.sh
+monitor.sh
+test-server.js
+
+# Data files (handled by Docker volume if needed)
+backend/data/*.json
+
